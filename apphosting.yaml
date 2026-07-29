@@ -15,12 +15,16 @@ env:
   # 投稿メディア（写真・動画）の保存先バケット名。未設定時はローカルディスクにフォールバックするため、
   # 本番では必須（DEPLOY.md 参照）
   - variable: FIREBASE_STORAGE_BUCKET
-    value: your-project-id.firebasestorage.app
+    value: human-quest-14a3f.firebasestorage.app
     availability:
       - RUNTIME
 
-  # 任意。Google AI Studio で発行したキー（未設定時はルールベースにフォールバック）
-  - variable: GEMINI_API_KEY
-    secret: GEMINI_API_KEY
-    availability:
-      - RUNTIME
+  # GEMINI_API_KEY は未設定。lib/ai.ts がルールベースにフォールバックするため動作に支障はない。
+  # AIフィードバック・AI課題選定を有効にする場合は、以下でシークレットを登録（権限付与も同時に行われる）してから
+  # 下のブロックのコメントを外す。
+  #   firebase apphosting:secrets:set GEMINI_API_KEY --project human-quest-14a3f
+  #
+  # - variable: GEMINI_API_KEY
+  #   secret: GEMINI_API_KEY
+  #   availability:
+  #     - RUNTIME
