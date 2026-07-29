@@ -1,0 +1,50 @@
+# main への push をGitHubの Deployments / Environments 欄に記録するワークフロー。
+#
+# 実際のデプロイは Firebase App Hosting のGitHub連携が別途行っており、その進捗は
+# コミットの Checks 欄（"App Hosting - Rollout ..."）に出る。このワークフローは
+# App Hosting のロールアウト成否までは確認していないため、ここが success でも
+# ロールアウトが失敗している可能性はある。最終的な判断は Checks 欄を見ること。
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 連続pushしたとき、古い実行はキャンセルして最新のみ残す
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ビルド検証
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      # バックエンドIDやリージョンを変えた場合はここも更新する
+      url: https://human-quest--human-quest-14a3f.asia-southeast1.hosted.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 依存関係のインストール
+        run: npm ci
+
+      - name: 型チェック
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # DATABASE_URL 未設定でも lib/db.ts が既定の接続文字列を使い、
+      # Pool は遅延接続のためビルドは通る
+      - name: 本番ビルド
+        run: npm run build
