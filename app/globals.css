@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1c1a17;
+  --color-paper: #fffefb;
+  --color-paper-warm: #faf7f1;
+  --color-line: #e9e3d6;
+  --color-muted: #8a8272;
+  --color-growth: #00875a;
+  --color-growth-dark: #00704b;
+  --color-growth-soft: #e4f3ec;
+  --color-ember: #e8622c;
+  --color-ember-dark: #c94f1f;
+  --color-ember-soft: #fdece2;
+  --color-sun: #c98a1f;
+  --color-tide: #2b7a8c;
+  --color-plum: #6f5bb5;
+  --color-blush: #c2486b;
+  --font-display: var(--font-zen-maru), "Hiragino Sans", sans-serif;
+}
+
+body {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo,
+    system-ui, sans-serif;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}

@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: human-quest-db
+    environment:
+      POSTGRES_USER: humanquest
+      POSTGRES_PASSWORD: humanquest
+      POSTGRES_DB: humanquest
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
+      - human-quest-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U humanquest -d humanquest"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  human-quest-pgdata:
