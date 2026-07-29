@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Footprints, Send, Sparkles, Gift } from "lucide-react";
-import { getStoredUser } from "@/lib/client/user";
+import { useHydrated, useStoredUser } from "@/lib/client/user";
 
 const CATEGORY_STYLE: Record<string, string> = {
   health: "bg-growth-soft text-growth-dark",
@@ -29,17 +29,15 @@ const STEPS = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
+  const hydrated = useHydrated();
+  const user = useStoredUser();
 
   useEffect(() => {
-    if (getStoredUser()) {
-      router.replace("/quest");
-      return;
-    }
-    setChecked(true);
-  }, [router]);
+    if (hydrated && user) router.replace("/quest");
+  }, [hydrated, user, router]);
 
-  if (!checked) return null;
+  // localStorage を読む前と、ログイン済みで /quest へ遷移中は何も描画しない
+  if (!hydrated || user) return null;
 
   return (
     <div className="min-h-screen">

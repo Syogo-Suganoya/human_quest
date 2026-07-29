@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Camera, ImagePlus, RotateCcw } from "lucide-react";
-import { getStoredUser, StoredUser } from "@/lib/client/user";
+import { useHydrated, useStoredUser } from "@/lib/client/user";
 import Avatar from "@/components/Avatar";
 
 type Quest = {
@@ -39,7 +39,8 @@ const CATEGORY_STYLE: Record<string, string> = {
 
 export default function QuestPage() {
   const router = useRouter();
-  const [user, setUser] = useState<StoredUser | null>(null);
+  const hydrated = useHydrated();
+  const user = useStoredUser();
   const [quests, setQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -55,20 +56,19 @@ export default function QuestPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const u = getStoredUser();
-    if (!u) {
-      router.push("/login");
-      return;
-    }
-    setUser(u);
-    fetch(`/api/quests/today?userId=${u.id}`)
+    if (hydrated && !user) router.push("/login");
+  }, [hydrated, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetch(`/api/quests/today?userId=${user.id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.quests) setQuests(data.quests);
         else setListError(data.error ?? "課題の取得に失敗しました");
       })
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [user]);
 
   function openComposer(id: number) {
     setActiveComposerId(id);

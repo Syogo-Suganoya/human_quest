@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStoredUser, StoredUser } from "@/lib/client/user";
+import { useStoredUser } from "@/lib/client/user";
 import PostCard, { FeedPost } from "./PostCard";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [user, setUser] = useState<StoredUser | null>(null);
+  const user = useStoredUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setUser(getStoredUser());
     fetch("/api/feed")
       .then((res) => res.json())
       .then((data) => {

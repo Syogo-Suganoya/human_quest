@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
-import { getStoredUser, setStoredUser } from "@/lib/client/user";
+import { setStoredUser, useStoredUser } from "@/lib/client/user";
 import Avatar from "@/components/Avatar";
 
 type Badge = { code: string; title: string; description: string };
@@ -30,17 +30,12 @@ export default function ProfileHeader({
   badges,
 }: Props) {
   const router = useRouter();
-  const [isOwner, setIsOwner] = useState(false);
+  const isOwner = useStoredUser()?.id === userId;
   const [editing, setEditing] = useState(false);
   const [nicknameInput, setNicknameInput] = useState(nickname);
   const [bioInput, setBioInput] = useState(bio);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const u = getStoredUser();
-    setIsOwner(u?.id === userId);
-  }, [userId]);
 
   function startEdit() {
     setNicknameInput(nickname);

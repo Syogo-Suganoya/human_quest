@@ -3,18 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, User as UserIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { clearStoredUser, getStoredUser, StoredUser } from "@/lib/client/user";
+import { clearStoredUser, useStoredUser } from "@/lib/client/user";
 import { NAV_ITEMS } from "./nav";
 import Avatar from "./Avatar";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<StoredUser | null>(null);
-
-  useEffect(() => {
-    setUser(getStoredUser());
-  }, [pathname]);
+  const user = useStoredUser();
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-60 md:shrink-0 border-r border-line px-3 py-4 h-screen sticky top-0">

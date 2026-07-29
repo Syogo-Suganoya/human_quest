@@ -3,17 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { User as UserIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { getStoredUser, StoredUser } from "@/lib/client/user";
+import { useStoredUser } from "@/lib/client/user";
 import { NAV_ITEMS } from "./nav";
 
 export default function MobileTabBar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<StoredUser | null>(null);
-
-  useEffect(() => {
-    setUser(getStoredUser());
-  }, [pathname]);
+  const user = useStoredUser();
 
   const items = [
     ...NAV_ITEMS,
