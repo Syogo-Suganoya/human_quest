@@ -8,7 +8,7 @@ import Avatar from "@/components/Avatar";
 export type FeedPost = {
   id: number;
   media_url: string;
-  media_type: "image" | "video";
+  media_type: "image" | "video" | "none";
   comment: string;
   ai_feedback: string;
   xp_awarded: number;
@@ -93,14 +93,15 @@ export default function PostCard({ post, user }: { post: FeedPost; user: StoredU
 
         {post.comment && <p className="text-[15px] mt-0.5 whitespace-pre-wrap">{post.comment}</p>}
 
-        {post.media_type === "image" ? (
+        {post.media_type === "image" && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={post.media_url}
             alt={post.quest_title}
             className="w-full max-h-96 object-cover rounded-2xl mt-2 border border-line"
           />
-        ) : (
+        )}
+        {post.media_type === "video" && (
           <video
             src={post.media_url}
             controls

@@ -1,6 +1,10 @@
 import { GoogleGenAI, type Part } from "@google/genai";
 
-const MODEL = process.env.AI_MODEL ?? "gemini-2.5-flash";
+const MODEL = process.env.AI_MODEL ?? "gemini-3.5-flash";
+
+// 思考（thinking）を無効化する。有効なままだと maxOutputTokens の大半を思考が消費し、
+// 本文が空 or 途中で切れて（finishReason = MAX_TOKENS）フォールバックに落ちる。
+const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } };
 
 function client() {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -17,7 +21,7 @@ export async function generateFeedback(params: {
   questTitle: string;
   questDescription: string;
   comment: string;
-  mediaType: "image" | "video";
+  mediaType: "image" | "video" | "none";
   mediaBase64?: string;
   mediaMimeType?: string;
 }): Promise<string> {
@@ -50,7 +54,7 @@ export async function generateFeedback(params: {
     const res = await ai.models.generateContent({
       model: MODEL,
       contents: [{ role: "user", parts }],
-      config: { maxOutputTokens: 200 },
+      config: { maxOutputTokens: 200, ...NO_THINKING },
     });
 
     const text = res.text?.trim();
@@ -92,7 +96,7 @@ export async function pickTodayQuest(params: {
 ${usable.map((c) => `id=${c.id} category=${c.category} title=${c.title}`).join("\n")}
 
 直近の挑戦カテゴリ履歴（新しい順）: ${recentCategories.join(", ") || "なし"}`,
-      config: { maxOutputTokens: 20 },
+      config: { maxOutputTokens: 50, ...NO_THINKING },
     });
 
     const match = (res.text ?? "").match(/\d+/);

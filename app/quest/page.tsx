@@ -111,9 +111,14 @@ export default function QuestPage() {
     }
   }
 
+  // 写真必須の課題は画像が要る。それ以外はコメントだけでも投稿できる。
+  function canSubmit(quest: Quest) {
+    return quest.required_media === "photo" ? file !== null : file !== null || comment.trim() !== "";
+  }
+
   async function handleSubmit(e: React.FormEvent, quest: Quest) {
     e.preventDefault();
-    if (!user || !file) return;
+    if (!user || !canSubmit(quest)) return;
     setSubmitting(true);
     setComposerError(null);
     try {
@@ -121,7 +126,7 @@ export default function QuestPage() {
       form.append("userId", String(user.id));
       form.append("dailyQuestId", String(quest.id));
       form.append("comment", comment);
-      form.append("media", file);
+      if (file) form.append("media", file);
 
       const res = await fetch("/api/posts", { method: "POST", body: form });
       const data = await res.json();
@@ -248,7 +253,11 @@ export default function QuestPage() {
                       <textarea
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="どうでしたか？一言コメント（任意）"
+                        placeholder={
+                          quest.required_media === "photo"
+                            ? "どうでしたか？一言コメント（任意）"
+                            : "どうでしたか？コメントだけでも投稿できます"
+                        }
                         maxLength={500}
                         rows={3}
                         className="w-full resize-none outline-none text-[17px] placeholder:text-muted/70"
@@ -269,7 +278,7 @@ export default function QuestPage() {
                         type="file"
                         accept={quest.required_media === "photo" ? "image/*" : "image/*,video/*"}
                         capture="environment"
-                        required
+                        required={quest.required_media === "photo"}
                         onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
                         className="hidden"
                       />
@@ -280,11 +289,13 @@ export default function QuestPage() {
                           className="flex items-center gap-1.5 text-growth hover:bg-growth-soft rounded-full px-2 py-1.5 text-sm font-medium transition-colors"
                         >
                           <ImagePlus size={20} />
-                          {quest.required_media === "photo" ? "写真を追加" : "写真・動画を追加"}
+                          {quest.required_media === "photo"
+                            ? "写真を追加"
+                            : "写真・動画を追加（任意）"}
                         </button>
                         <button
                           type="submit"
-                          disabled={submitting || !file}
+                          disabled={submitting || !canSubmit(quest)}
                           className="rounded-full bg-growth hover:bg-growth-dark text-white px-5 py-2 font-bold text-sm disabled:opacity-40 transition-colors"
                         >
                           {submitting ? "投稿中..." : "投稿する"}

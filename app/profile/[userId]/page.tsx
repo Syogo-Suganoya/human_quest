@@ -30,7 +30,7 @@ export default async function ProfilePage({
 
   const posts = (
     await db.query(
-      `SELECT p.id, p.media_url, p.media_type, p.xp_awarded, p.created_at, qc.title AS quest_title
+      `SELECT p.id, p.media_url, p.media_type, p.comment, p.xp_awarded, p.created_at, qc.title AS quest_title
        FROM posts p
        JOIN daily_quests dq ON dq.id = p.daily_quest_id
        JOIN quest_catalog qc ON qc.id = dq.quest_catalog_id
@@ -61,11 +61,19 @@ export default async function ProfilePage({
       <div className="grid grid-cols-3 gap-px bg-line">
         {posts.map((p) => (
           <div key={p.id} className="aspect-square bg-paper overflow-hidden">
-            {p.media_type === "image" ? (
+            {p.media_type === "image" && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.media_url} alt={p.quest_title} className="w-full h-full object-cover" />
-            ) : (
+            )}
+            {p.media_type === "video" && (
               <video src={p.media_url} className="w-full h-full object-cover" />
+            )}
+            {p.media_type === "none" && (
+              // コメントのみの投稿はテキストのタイルとして並べる
+              <div className="w-full h-full bg-paper-warm p-2 flex flex-col justify-center gap-1">
+                <p className="text-[10px] text-muted line-clamp-1">{p.quest_title}</p>
+                <p className="text-[11px] leading-snug line-clamp-4">{p.comment}</p>
+              </div>
             )}
           </div>
         ))}

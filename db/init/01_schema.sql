@@ -32,8 +32,8 @@ CREATE TABLE posts (
   id              serial PRIMARY KEY,
   user_id         integer NOT NULL REFERENCES users(id),
   daily_quest_id  integer NOT NULL REFERENCES daily_quests(id),
-  media_url       text NOT NULL,
-  media_type      text NOT NULL, -- image / video
+  media_url       text NOT NULL DEFAULT '', -- none のときは空文字
+  media_type      text NOT NULL, -- image / video / none（コメントのみの投稿）
   comment         text NOT NULL DEFAULT '',
   ai_feedback     text NOT NULL DEFAULT '',
   xp_awarded      integer NOT NULL DEFAULT 0,

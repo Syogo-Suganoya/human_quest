@@ -17,24 +17,32 @@ export async function POST(req: NextRequest) {
   const userId = Number(form.get("userId"));
   const dailyQuestId = Number(form.get("dailyQuestId"));
   const comment = String(form.get("comment") ?? "").slice(0, 500);
-  const file = form.get("media");
+  const raw = form.get("media");
+  // メディアは任意。写真必須（required_media = 'photo'）の課題のみ、この後で必須チェックする。
+  const file = raw instanceof File && raw.size > 0 ? raw : null;
 
-  if (!userId || !dailyQuestId || !(file instanceof File)) {
+  if (!userId || !dailyQuestId) {
     return NextResponse.json(
-      { error: "userId, dailyQuestId, media は必須です" },
+      { error: "userId, dailyQuestId は必須です" },
       { status: 400 }
     );
   }
-  if (file.size > 15 * 1024 * 1024) {
+  if (!file && !comment.trim()) {
+    return NextResponse.json(
+      { error: "写真・動画かコメントのどちらかを入力してください" },
+      { status: 400 }
+    );
+  }
+  if (file && file.size > 15 * 1024 * 1024) {
     return NextResponse.json(
       { error: "ファイルサイズは15MB以下にしてください" },
       { status: 400 }
     );
   }
 
-  const isImage = IMAGE_TYPES.has(file.type);
-  const isVideo = file.type.startsWith("video/");
-  if (!isImage && !isVideo) {
+  const isImage = file !== null && IMAGE_TYPES.has(file.type);
+  const isVideo = file !== null && file.type.startsWith("video/");
+  if (file && !isImage && !isVideo) {
     return NextResponse.json(
       { error: "画像または動画ファイルを選択してください" },
       { status: 400 }
@@ -55,9 +63,9 @@ export async function POST(req: NextRequest) {
     }
     const quest = questRow.rows[0];
 
-    if (quest.required_media === "photo" && isVideo) {
+    if (quest.required_media === "photo" && !isImage) {
       return NextResponse.json(
-        { error: "この課題は写真での投稿が必要です（動画は選択できません）" },
+        { error: "この課題は写真での投稿が必要です" },
         { status: 400 }
       );
     }
@@ -73,18 +81,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = path.extname(file.name) || (isImage ? ".jpg" : ".mp4");
-    const filename = `${randomUUID()}${ext}`;
-    const mediaUrl = await uploadMedia(buffer, filename, file.type);
+    // メディアなし（コメントのみ）の投稿は media_url を空、media_type を 'none' として保存する
+    const mediaType = isImage ? "image" : isVideo ? "video" : "none";
+    let mediaUrl = "";
+    let buffer: Buffer | null = null;
+    if (file) {
+      buffer = Buffer.from(await file.arrayBuffer());
+      const ext = path.extname(file.name) || (isImage ? ".jpg" : ".mp4");
+      mediaUrl = await uploadMedia(buffer, `${randomUUID()}${ext}`, file.type);
+    }
 
     const feedback = await generateFeedback({
       questTitle: quest.title,
       questDescription: quest.description,
       comment,
-      mediaType: isImage ? "image" : "video",
-      mediaBase64: isImage ? buffer.toString("base64") : undefined,
-      mediaMimeType: isImage ? file.type : undefined,
+      mediaType,
+      mediaBase64: isImage && buffer ? buffer.toString("base64") : undefined,
+      mediaMimeType: isImage && file ? file.type : undefined,
     });
 
     const previousAttempts = Number(
@@ -102,7 +115,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO posts (user_id, daily_quest_id, media_url, media_type, comment, ai_feedback, xp_awarded)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, media_url, media_type, comment, ai_feedback, xp_awarded, created_at`,
-      [userId, dailyQuestId, mediaUrl, isImage ? "image" : "video", comment, feedback, xp]
+      [userId, dailyQuestId, mediaUrl, mediaType, comment, feedback, xp]
     );
     const post = postRes.rows[0];
 
