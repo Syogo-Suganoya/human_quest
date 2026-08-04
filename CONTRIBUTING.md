@@ -1,7 +1,6 @@
 # 開発ガイド（CONTRIBUTING）
 
 Human Quest のローカル開発環境のセットアップと開発ルールをまとめる。
-本番リリース手順は [DEPLOY.md](DEPLOY.md) を参照。
 
 ## 技術スタック
 
@@ -22,14 +21,6 @@ Human Quest のローカル開発環境のセットアップと開発ルール�
 投稿1件（`POST /api/posts`）が処理される流れ：
 
 ![投稿フロー](docs/post_flow.png)
-
-図は [`docs/architecture.py`](docs/architecture.py)（Python の [diagrams](https://diagrams.mingrammer.com/)）から生成している。構成を変えたときはスクリプトを更新してPNGを再生成する。
-
-```bash
-brew install graphviz        # 既に入っていれば不要
-pip install diagrams
-python docs/architecture.py  # docs/*.png を上書き
-```
 
 ## セットアップ
 
