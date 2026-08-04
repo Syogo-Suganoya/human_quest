@@ -8,8 +8,16 @@ const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } };
 
 function client() {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.warn("[ai] GEMINI_API_KEY が未設定のためルールベースにフォールバックします");
+    return null;
+  }
   return new GoogleGenAI({ apiKey });
+}
+
+/** フォールバックした理由をログに残す。原因が分からないまま固定文言に落ちるのを防ぐ。 */
+function logFallback(where: string, err: unknown) {
+  console.error(`[ai] ${where} が失敗したためフォールバックします (model=${MODEL}):`, err);
 }
 
 /**
@@ -58,8 +66,14 @@ export async function generateFeedback(params: {
     });
 
     const text = res.text?.trim();
+    if (!text) {
+      console.warn(
+        `[ai] generateFeedback の応答が空でした (model=${MODEL}, finishReason=${res.candidates?.[0]?.finishReason})`
+      );
+    }
     return text || "今日の挑戦、お疲れさまでした！";
-  } catch {
+  } catch (err) {
+    logFallback("generateFeedback", err);
     return `「${params.questTitle}」への挑戦、お疲れさまでした！行動に移せたこと自体が素晴らしい一歩です。`;
   }
 }
@@ -102,7 +116,8 @@ ${usable.map((c) => `id=${c.id} category=${c.category} title=${c.title}`).join("
     const match = (res.text ?? "").match(/\d+/);
     const id = match ? Number(match[0]) : NaN;
     return usable.some((c) => c.id === id) ? id : leastRecentFirst[0].id;
-  } catch {
+  } catch (err) {
+    logFallback("pickTodayQuest", err);
     return leastRecentFirst[0].id;
   }
 }
