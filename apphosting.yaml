@@ -5,26 +5,21 @@ runConfig:
   # ハッカソン/デモ用途のため最小構成（コスト抑制）
   maxInstances: 1
 
+# 秘匿値（DATABASE_URL / GEMINI_API_KEY）は Firebase コンソールの
+# App Hosting > 設定 > 環境変数 で設定しており、このファイルには書かない。
+# Secret Manager にはシークレットを登録していないため、ここで secret: 参照を書くと
+# 存在しないシークレットを参照してロールアウトが失敗する。
 env:
-  # Neon の接続文字列。値は Secret Manager に保存する（DEPLOY.md 参照）
-  - variable: DATABASE_URL
-    secret: DATABASE_URL
-    availability:
-      - RUNTIME
-
-  # 投稿メディア（写真・動画）の保存先バケット名。未設定時はローカルディスクにフォールバックするため、
-  # 本番では必須（DEPLOY.md 参照）
+  # 投稿メディア（写真・動画）の保存先バケット名。
+  # 未設定だとローカルディスクにフォールバックしてしまうため本番では必須。
   - variable: FIREBASE_STORAGE_BUCKET
     value: human-quest-14a3f.firebasestorage.app
     availability:
       - RUNTIME
 
-  # GEMINI_API_KEY は未設定。lib/ai.ts がルールベースにフォールバックするため動作に支障はない。
-  # AIフィードバック・AI課題選定を有効にする場合は、以下でシークレットを登録（権限付与も同時に行われる）してから
-  # 下のブロックのコメントを外す。
-  #   firebase apphosting:secrets:set GEMINI_API_KEY --project human-quest-14a3f
-  #
-  # - variable: GEMINI_API_KEY
-  #   secret: GEMINI_API_KEY
-  #   availability:
-  #     - RUNTIME
+  # 使用する Gemini のモデル。gemini-2.5-flash は新規ユーザーには提供されておらず 404 になる。
+  # 秘匿値ではないのでここで管理する（コンソール側にも同名の設定がある場合はそちらが優先される）。
+  - variable: AI_MODEL
+    value: gemini-3.5-flash
+    availability:
+      - RUNTIME
